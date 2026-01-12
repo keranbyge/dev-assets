@@ -1,0 +1,128 @@
+"use client";
+
+import { useState } from "react";
+import Image from "next/image";
+import { supabase } from "@/lib/supabaseClient";
+
+export default function UploadAsset() {
+  const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [publicUrl, setPublicUrl] = useState<string | null>(null);
+  const [filePath, setFilePath] = useState<string | null>(null);
+
+  const handleUpload = async () => {
+    if (!file) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${crypto.randomUUID()}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("assets")
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage.from("assets").getPublicUrl(filePath);
+
+      setPublicUrl(data.publicUrl);
+      setFilePath(filePath);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Upload failed");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!filePath) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.storage
+        .from("assets")
+        .remove([filePath]);
+
+      if (error) {
+        throw error;
+      }
+
+      setPublicUrl(null);
+      setFilePath(null);
+      setFile(null);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Delete failed");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mt-8 max-w-md rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
+      <h2 className="text-lg font-semibold mb-4">Upload Asset</h2>
+
+      <input
+        type="file"
+        className="block w-full text-sm text-gray-300
+        file:mr-4 file:rounded-lg file:border-0
+        file:bg-white/10 file:px-4 file:py-2
+        file:text-sm file:text-white hover:file:bg-white/20"
+        onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+      />
+
+      <button
+        onClick={handleUpload}
+        disabled={loading || !file}
+        className="mt-4 w-full rounded-lg bg-white text-black py-2 text-sm font-medium hover:bg-gray-200 transition disabled:opacity-50"
+      >
+        {loading ? "Uploading..." : "Upload"}
+      </button>
+
+      {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+
+      {publicUrl && (
+        <div className="mt-6 space-y-4">
+          <Image
+            src={publicUrl}
+            alt="Uploaded asset"
+            width={300}
+            height={300}
+            className="rounded-xl border border-white/10"
+          />
+
+          <a
+            href={publicUrl}
+            target="_blank"
+            className="block text-xs text-blue-400 underline break-all"
+          >
+            {publicUrl}
+          </a>
+
+          <button
+            onClick={handleDelete}
+            className="flex w-full items-center justify-center rounded-lg border border-red-500/30 text-red-400 py-2 text-sm hover:bg-red-500/10 transition"
+          >
+            Delete
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
