@@ -4,7 +4,8 @@ import { useState } from "react";
 import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
 
-export default function UploadAsset() {
+type UploadAssetProps = { onUploaded?: () => void };
+export default function UploadAsset({ onUploaded }: UploadAssetProps) {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +23,7 @@ export default function UploadAsset() {
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `${crypto.randomUUID()}/${fileName}`;
 
+      // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from("assets")
         .upload(filePath, file);
@@ -30,10 +32,31 @@ export default function UploadAsset() {
         throw uploadError;
       }
 
+      // Insert metadata into assets table
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error("Not authenticated");
+      }
+
+      const { error: insertError } = await supabase.from("assets").insert({
+        user_id: session.user.id,
+        file_name: file.name,
+        file_path: filePath,
+        mime_type: file.type || null,
+      });
+      if (insertError) {
+        throw insertError;
+      }
+
       const { data } = supabase.storage.from("assets").getPublicUrl(filePath);
 
       setPublicUrl(data.publicUrl);
       setFilePath(filePath);
+
+      // notify parent to refresh listing
+      onUploaded?.();
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -52,17 +75,30 @@ export default function UploadAsset() {
     setError(null);
 
     try {
-      const { error } = await supabase.storage
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      // Remove from storage
+      const { error: sErr } = await supabase.storage
         .from("assets")
         .remove([filePath]);
+      if (sErr) throw sErr;
 
-      if (error) {
-        throw error;
-      }
+      // Remove from DB
+      const { error: dbErr } = await supabase
+        .from("assets")
+        .delete()
+        .eq("user_id", session.user.id)
+        .eq("file_path", filePath);
+      if (dbErr) throw dbErr;
 
       setPublicUrl(null);
       setFilePath(null);
       setFile(null);
+
+      onUploaded?.();
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
