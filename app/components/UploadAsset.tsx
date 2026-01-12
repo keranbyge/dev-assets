@@ -9,6 +9,7 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [publicUrl, setPublicUrl] = useState<string | null>(null);
   const [filePath, setFilePath] = useState<string | null>(null);
 
@@ -17,51 +18,48 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
 
     setLoading(true);
     setError(null);
+    setSuccess(null);
 
     try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `${crypto.randomUUID()}/${fileName}`;
-
-      // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from("assets")
-        .upload(filePath, file);
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      // Insert metadata into assets table
+      // Get session for user id
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error("Not authenticated");
-      }
+      if (!session) throw new Error("Not authenticated");
+      const userId = session.user.id;
+
+      // Required path: assets/{userId}/{filename} (bucket is 'assets', path is '{userId}/{filename}')
+      const path = `${userId}/${file.name}`;
+
+      // Upload to Supabase Storage (allow overwrite to avoid duplicate errors)
+      const { error: uploadError } = await supabase.storage
+        .from("assets")
+        .upload(path, file, { upsert: true });
+      if (uploadError) throw uploadError;
+
+      // Get public URL and insert DB record
+      const { data } = supabase.storage.from("assets").getPublicUrl(path);
+      const publicUrl = data.publicUrl;
 
       const { error: insertError } = await supabase.from("assets").insert({
-        user_id: session.user.id,
+        user_id: userId,
         file_name: file.name,
-        file_path: filePath,
-        mime_type: file.type || null,
+        file_path: path,
+        public_url: publicUrl,
       });
-      if (insertError) {
-        throw insertError;
-      }
+      if (insertError) throw insertError;
 
-      const { data } = supabase.storage.from("assets").getPublicUrl(filePath);
+      setPublicUrl(publicUrl);
+      setFilePath(path);
+      setSuccess("Uploaded successfully");
 
-      setPublicUrl(data.publicUrl);
-      setFilePath(filePath);
-
-      // notify parent to refresh listing
       onUploaded?.();
     } catch (err) {
+      setSuccess(null);
       if (err instanceof Error) {
-        setError(err.message);
+        setError(`Upload failed: ${err.message}`);
       } else {
-        setError("Upload failed");
+        setError("Upload failed: Unknown error");
       }
     } finally {
       setLoading(false);
@@ -73,6 +71,7 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
 
     setLoading(true);
     setError(null);
+    setSuccess(null);
 
     try {
       const {
@@ -97,6 +96,7 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
       setPublicUrl(null);
       setFilePath(null);
       setFile(null);
+      setSuccess("Deleted successfully");
 
       onUploaded?.();
     } catch (err) {
@@ -126,11 +126,15 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
       <button
         onClick={handleUpload}
         disabled={loading || !file}
-        className="mt-4 w-full rounded-lg bg-white text-black py-2 text-sm font-medium hover:bg-gray-200 transition disabled:opacity-50"
+        className="mt-4 w-full rounded-lg bg-white text-black py-2 text-sm font-medium hover:bg-gray-200 transition disabled:opacity-50 flex items-center justify-center gap-2"
       >
+        {loading && (
+          <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+        )}
         {loading ? "Uploading..." : "Upload"}
       </button>
 
+      {success && <p className="mt-3 text-sm text-green-400">{success}</p>}
       {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
 
       {publicUrl && (
