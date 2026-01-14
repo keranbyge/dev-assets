@@ -3,37 +3,25 @@
 import { useEffect, useState } from "react";
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") return "dark";
+    const saved = localStorage.getItem("theme");
+    if (saved === "light" || saved === "dark") return saved;
+    if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
+    return "light";
+  });
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Determine initial theme: localStorage > system > default dark
+    document.documentElement.classList.toggle("dark", theme === "dark");
     try {
-      const root = document.documentElement;
-      const ls = localStorage.getItem("theme");
-      let initial: "light" | "dark" | null = null;
-      if (ls === "light" || ls === "dark") initial = ls;
-      else if (window.matchMedia) {
-        initial = window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light";
-      }
-      const next = (initial ?? "dark") as "light" | "dark";
-      if (next === "dark") root.classList.add("dark");
-      else root.classList.remove("dark");
-      setTheme(next);
-    } catch {
-      // Fallback to dark if anything goes wrong
-      document.documentElement.classList.add("dark");
-      setTheme("dark");
-    }
+      localStorage.setItem("theme", theme);
+    } catch {}
     setMounted(true);
-  }, []);
+  }, [theme]);
 
   const apply = (next: "light" | "dark") => {
-    const root = document.documentElement;
-    if (next === "dark") root.classList.add("dark");
-    else root.classList.remove("dark");
+    document.documentElement.classList.toggle("dark", next === "dark");
     try {
       localStorage.setItem("theme", next);
     } catch {}

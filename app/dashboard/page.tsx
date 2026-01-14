@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
 import UploadAsset from "@/app/components/UploadAsset";
 
@@ -20,15 +19,18 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Keep original session check behavior
   useEffect(() => {
     const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error || !data.session) {
+          window.location.href = "/login";
+          return;
+        }
+        setSessionChecked(true);
+      } catch (err) {
         window.location.href = "/login";
-        return;
       }
-      setSessionChecked(true);
     };
     checkSession();
   }, []);
@@ -37,10 +39,8 @@ export default function DashboardPage() {
     setLoading(true);
     setError(null);
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) return;
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) throw new Error("Authentication required");
 
       const { data, error } = await supabase
         .from("assets")
@@ -48,123 +48,139 @@ export default function DashboardPage() {
         .eq("user_id", session.user.id)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) throw new Error(error.message);
       setAssets(data ?? []);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load assets");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load assets");
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (sessionChecked) {
-      fetchAssets();
-    }
+    if (sessionChecked) fetchAssets();
   }, [sessionChecked, fetchAssets]);
 
   const publicUrlFor = (path: string) =>
     supabase.storage.from("assets").getPublicUrl(path).data.publicUrl;
 
   const deleteAsset = async (asset: Asset) => {
-    // optimistic update
-    const prev = assets;
-    setAssets((cur) => cur.filter((a) => a.id !== asset.id));
+    const previousAssets = assets;
+    setAssets((current) => current.filter((a) => a.id !== asset.id));
+    
     try {
-      const { error: sErr } = await supabase.storage
-        .from("assets")
-        .remove([asset.file_path]);
-      if (sErr) throw sErr;
-
       const { error: dbErr } = await supabase
         .from("assets")
         .delete()
         .eq("id", asset.id)
         .eq("user_id", asset.user_id);
-      if (dbErr) throw dbErr;
-    } catch (e) {
-      // revert on failure
-      setAssets(prev);
-      setError(e instanceof Error ? e.message : "Failed to delete asset");
+      
+      if (dbErr) throw new Error(dbErr.message);
+
+      await supabase.storage.from("assets").remove([asset.file_path]);
+    } catch (err) {
+      setAssets(previousAssets);
+      setError(err instanceof Error ? err.message : "Failed to delete");
     }
   };
 
-  const handleAfterUpload = () => {
-    // Re-fetch to include newly uploaded item
-    fetchAssets();
-  };
+  if (!sessionChecked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-neutral-400">Loading...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Left: Upload card */}
-        <div className="lg:col-span-1 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
-          <UploadAsset onUploaded={handleAfterUpload} />
+    <div className="min-h-screen p-6">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+          <p className="text-neutral-400 mt-1">Manage your assets</p>
         </div>
 
-        {/* Right: Gallery */}
-        <div className="lg:col-span-2 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Your Assets</h2>
-            {loading && <span className="text-xs text-gray-400">Loading…</span>}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1">
+            <UploadAsset onUploaded={fetchAssets} />
           </div>
 
-          {error && (
-            <div className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 text-red-200 p-3 text-sm">
-              {error}
-            </div>
-          )}
+          <div className="lg:col-span-2">
+            <div className="backdrop-blur-xl bg-neutral-900/50 border border-neutral-800 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-lg font-semibold text-white">Your Assets</h2>
+                  <p className="text-sm text-neutral-400 mt-1">
+                    {assets.length} {assets.length === 1 ? 'file' : 'files'}
+                  </p>
+                </div>
+                {loading && <div className="text-sm text-neutral-400">Loading...</div>}
+              </div>
 
-          {assets.length === 0 && !loading ? (
-            <p className="text-sm text-gray-400">No assets yet. Upload your first file on the left.</p>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-5">
-              {assets.map((asset) => {
-              const url = asset.public_url ?? publicUrlFor(asset.file_path);
-              return (
-                  <div
-                    key={asset.id}
-                    className="group rounded-xl border border-white/10 bg-white/5 backdrop-blur-md overflow-hidden shadow hover:shadow-2xl transition-shadow"
-                  >
-                    <div className="relative aspect-square bg-black/30">
-                      <Image
-                        src={url}
-                        alt={asset.file_name}
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className="object-cover"
-                        unoptimized
-                      />
-                    </div>
-                    <div className="p-4 space-y-2">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-medium truncate" title={asset.file_name}>
-                          {asset.file_name}
-                        </p>
-                        <button
-                          onClick={() => deleteAsset(asset)}
-                          className="rounded-md border border-red-500/30 text-red-300 text-xs px-2 py-1 hover:bg-red-500/10"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                      <a
-                        href={url}
-                        target="_blank"
-                        className="block text-[11px] text-blue-300/90 underline break-all hover:text-blue-200"
+              {error && (
+                <div className="mb-6 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 p-4 text-sm">
+                  {error}
+                </div>
+              )}
+
+              {assets.length === 0 && !loading ? (
+                <div className="text-center py-12">
+                  <div className="text-4xl mb-4">📁</div>
+                  <p className="text-neutral-400">No assets yet. Upload your first file.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {assets.map((asset) => {
+                    const url = asset.public_url ?? publicUrlFor(asset.file_path);
+                    const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(asset.file_name);
+                    
+                    return (
+                      <div
+                        key={asset.id}
+                        className="group bg-neutral-800/50 border border-neutral-700 rounded-lg overflow-hidden hover:border-neutral-600 transition"
                       >
-                        {url}
-                      </a>
-                    </div>
-                  </div>
-                );
-              })}
+                        <div className="relative aspect-video bg-neutral-900">
+                          {isImage ? (
+                            <img
+                              src={url}
+                              alt={asset.file_name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex items-center justify-center h-full">
+                              <span className="text-4xl">📄</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="p-4">
+                          <h3 className="font-medium text-white truncate mb-2" title={asset.file_name}>
+                            {asset.file_name}
+                          </h3>
+                          <div className="flex gap-2">
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-1 text-center text-sm bg-blue-600 hover:bg-blue-700 text-white rounded px-3 py-1.5 transition"
+                            >
+                              View
+                            </a>
+                            <button
+                              onClick={() => deleteAsset(asset)}
+                              className="text-sm bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded px-3 py-1.5 transition"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
     </div>

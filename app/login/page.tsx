@@ -11,73 +11,100 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleLogin = async () => {
-    setLoading(true);
-    setError(null);
-
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      setError(error.message);
-      setLoading(false);
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      setError("Please enter both email and password");
       return;
     }
 
-    router.push("/dashboard");
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (error) throw new Error(error.message);
+      if (data.user) router.push("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Login failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <main className="relative min-h-[calc(100vh-64px)] flex items-center justify-center px-4">
-      {/* Centered glass card */}
-      <div className="relative w-full max-w-md rounded-2xl border border-white/15 bg-white/10 backdrop-blur-2xl shadow-[0_10px_40px_rgba(0,0,0,0.45)] ring-1 ring-white/5 p-8">
-        {/* glow accents */}
-        <div className="pointer-events-none absolute -inset-px rounded-2xl shadow-[0_0_80px_rgba(59,130,246,0.25)]" />
-
-        {/* Header */}
-        <h1 className="text-3xl font-semibold text-white text-center tracking-tight">
-          Dev Assets
-        </h1>
-        <p className="text-sm text-gray-300 text-center mt-2">Sign in to continue</p>
-
-        {/* Error */}
-        {error && (
-          <div className="mt-5 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-300">
-            {error}
+    <main className="min-h-screen flex items-center justify-center p-6">
+      <div className="w-full max-w-md">
+        <div className="backdrop-blur-xl bg-neutral-900/50 border border-neutral-800 rounded-xl p-8 shadow-2xl">
+          <div className="text-center mb-8">
+            <div className="mx-auto h-12 w-12 rounded-lg bg-blue-600 flex items-center justify-center mb-4">
+              <span className="text-xl font-bold text-white">DA</span>
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-2">
+              Welcome Back
+            </h1>
+            <p className="text-neutral-400 text-sm">Sign in to Dev Assets</p>
           </div>
-        )}
 
-        {/* Inputs */}
-        <div className="mt-6 space-y-4">
-          <input
-            type="email"
-            placeholder="Email"
-            className="w-full rounded-xl bg-black/30 border border-white/10 px-4 py-3 text-white placeholder-white/60 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 transition"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          {error && (
+            <div className="mb-6 rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-400">
+              {error}
+            </div>
+          )}
 
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-full rounded-xl bg-black/30 border border-white/10 px-4 py-3 text-white placeholder-white/60 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 transition"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-neutral-300 mb-2">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                className="w-full rounded-lg bg-neutral-800/50 border border-neutral-700 px-4 py-2.5 text-white placeholder-neutral-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError(null);
+                }}
+                disabled={loading}
+                required
+              />
+            </div>
 
-          <button
-            onClick={handleLogin}
-            disabled={loading}
-            className="w-full rounded-xl bg-blue-500 text-white font-medium py-3 shadow-[0_10px_30px_rgba(59,130,246,0.35)] hover:shadow-[0_12px_36px_rgba(59,130,246,0.45)] active:scale-[0.99] transition disabled:opacity-50"
-          >
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-neutral-300 mb-2">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                className="w-full rounded-lg bg-neutral-800/50 border border-neutral-700 px-4 py-2.5 text-white placeholder-neutral-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError(null);
+                }}
+                disabled={loading}
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading || !email || !password}
+              className="w-full rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? "Signing in..." : "Sign In"}
+            </button>
+          </form>
         </div>
-
-        {/* Footer */}
-        <p className="text-xs text-gray-400 text-center mt-6">Secure • Fast • Modern</p>
       </div>
     </main>
   );
