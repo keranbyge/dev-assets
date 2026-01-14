@@ -63,18 +63,20 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
   };
 
   return (
-    <div className="backdrop-blur-xl bg-neutral-900/50 border border-neutral-800 rounded-xl p-6">
-      <h2 className="text-lg font-semibold text-white mb-4">Upload Asset</h2>
-
-      <div className="space-y-4">
+    <div>
+      <h3 className="text-base font-semibold text-white/90 mb-4">Upload Asset</h3>
+      
+      <div className="space-y-3">
         <input
           type="file"
           accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
-          className="block w-full text-sm text-neutral-400
+          className="block w-full text-sm text-white/70
             file:mr-4 file:rounded-lg file:border-0
-            file:bg-blue-600 file:px-4 file:py-2
-            file:text-sm file:text-white file:font-medium
-            hover:file:bg-blue-700 file:cursor-pointer cursor-pointer"
+            file:bg-gradient-to-r file:from-blue-500 file:to-blue-600
+            file:px-4 file:py-2 file:text-sm file:text-white file:font-medium
+            file:shadow-lg file:shadow-blue-500/20
+            hover:file:from-blue-600 hover:file:to-blue-700
+            file:cursor-pointer cursor-pointer file:transition-all"
           onChange={(e) => {
             setFile(e.target.files?.[0] ?? null);
             setError(null);
@@ -86,23 +88,19 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
         <button
           onClick={handleUpload}
           disabled={loading || !file}
-          className="w-full rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium py-2.5 shadow-lg shadow-blue-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
         >
-          {loading ? "Uploading..." : "Upload"}
+          {loading ? "Uploading..." : "Upload File"}
         </button>
-      </div>
 
-      {success && (
-        <div className="mt-4 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 p-3 text-sm">
-          {success}
-        </div>
-      )}
-      
-      {error && (
-        <div className="mt-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 p-3 text-sm">
-          {error}
-        </div>
-      )}
+        {success && (
+          <p className="text-green-400 text-xs">{success}</p>
+        )}
+        
+        {error && (
+          <p className="text-red-400 text-xs">{error}</p>
+        )}
+      </div>
     </div>
   );
 }

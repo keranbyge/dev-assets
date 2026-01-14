@@ -87,100 +87,89 @@ export default function DashboardPage() {
   if (!sessionChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-neutral-400">Loading...</div>
+        <div className="text-white/50">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-6">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-          <p className="text-neutral-400 mt-1">Manage your assets</p>
+    <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="w-full max-w-md backdrop-blur-2xl bg-white/5 rounded-2xl p-8 shadow-2xl">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-semibold text-white/90 mb-2">Dev Assets</h1>
+          <p className="text-sm text-white/50">Manage your digital assets</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">
-            <UploadAsset onUploaded={fetchAssets} />
-          </div>
+        {/* Upload Section */}
+        <div className="mb-8">
+          <UploadAsset onUploaded={fetchAssets} />
+        </div>
 
-          <div className="lg:col-span-2">
-            <div className="backdrop-blur-xl bg-neutral-900/50 border border-neutral-800 rounded-xl p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h2 className="text-lg font-semibold text-white">Your Assets</h2>
-                  <p className="text-sm text-neutral-400 mt-1">
-                    {assets.length} {assets.length === 1 ? 'file' : 'files'}
-                  </p>
-                </div>
-                {loading && <div className="text-sm text-neutral-400">Loading...</div>}
-              </div>
-
-              {error && (
-                <div className="mb-6 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 p-4 text-sm">
-                  {error}
-                </div>
-              )}
-
-              {assets.length === 0 && !loading ? (
-                <div className="text-center py-12">
-                  <div className="text-4xl mb-4">📁</div>
-                  <p className="text-neutral-400">No assets yet. Upload your first file.</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {assets.map((asset) => {
-                    const url = asset.public_url ?? publicUrlFor(asset.file_path);
-                    const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(asset.file_name);
-                    
-                    return (
-                      <div
-                        key={asset.id}
-                        className="group bg-neutral-800/50 border border-neutral-700 rounded-lg overflow-hidden hover:border-neutral-600 transition"
-                      >
-                        <div className="relative aspect-video bg-neutral-900">
-                          {isImage ? (
-                            <img
-                              src={url}
-                              alt={asset.file_name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="flex items-center justify-center h-full">
-                              <span className="text-4xl">📄</span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="p-4">
-                          <h3 className="font-medium text-white truncate mb-2" title={asset.file_name}>
-                            {asset.file_name}
-                          </h3>
-                          <div className="flex gap-2">
-                            <a
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex-1 text-center text-sm bg-blue-600 hover:bg-blue-700 text-white rounded px-3 py-1.5 transition"
-                            >
-                              View
-                            </a>
-                            <button
-                              onClick={() => deleteAsset(asset)}
-                              className="text-sm bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded px-3 py-1.5 transition"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+        {/* Assets Section */}
+        <div>
+          <h2 className="text-lg font-semibold text-white/90 mb-4">Your Assets</h2>
+          
+          {error && (
+            <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 p-3 text-sm">
+              {error}
             </div>
-          </div>
+          )}
+
+          {loading ? (
+            <div className="text-center py-8 text-white/50 text-sm">Loading...</div>
+          ) : assets.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-4xl mb-3 opacity-40">📁</div>
+              <p className="text-white/60 text-sm mb-1">No assets yet</p>
+              <p className="text-white/40 text-xs">Upload your first file to get started</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {assets.map((asset) => {
+                const url = asset.public_url ?? publicUrlFor(asset.file_path);
+                const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(asset.file_name);
+                
+                return (
+                  <div
+                    key={asset.id}
+                    className="backdrop-blur-xl bg-white/5 rounded-xl p-4 hover:bg-white/10 transition-all"
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-black/30 flex items-center justify-center overflow-hidden">
+                        {isImage ? (
+                          <img src={url} alt={asset.file_name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-xl opacity-50">📄</span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-medium text-white/90 truncate" title={asset.file_name}>
+                          {asset.file_name}
+                        </h3>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 text-center text-xs bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg px-3 py-2 transition-all shadow-lg shadow-blue-500/20 font-medium"
+                      >
+                        View
+                      </a>
+                      <button
+                        onClick={() => deleteAsset(asset)}
+                        className="text-xs bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg px-3 py-2 transition-all font-medium"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>

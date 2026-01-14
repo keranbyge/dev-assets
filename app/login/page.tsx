@@ -39,34 +39,31 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        <div className="backdrop-blur-xl bg-neutral-900/50 border border-neutral-800 rounded-xl p-8 shadow-2xl">
+      <div className="w-full max-w-sm">
+        <div className="backdrop-blur-2xl bg-white/5 rounded-2xl p-8 shadow-2xl">
           <div className="text-center mb-8">
-            <div className="mx-auto h-12 w-12 rounded-lg bg-blue-600 flex items-center justify-center mb-4">
-              <span className="text-xl font-bold text-white">DA</span>
+            <div className="mx-auto h-14 w-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mb-4 shadow-lg">
+              <span className="text-2xl font-bold text-white">DA</span>
             </div>
-            <h1 className="text-2xl font-bold text-white mb-2">
-              Welcome Back
+            <h1 className="text-2xl font-semibold text-white/90 mb-2">
+              Dev Assets
             </h1>
-            <p className="text-neutral-400 text-sm">Sign in to Dev Assets</p>
+            <p className="text-sm text-white/50">Sign in to continue</p>
           </div>
 
           {error && (
-            <div className="mb-6 rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-400">
+            <div className="mb-6 rounded-xl bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-400">
               {error}
             </div>
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-neutral-300 mb-2">
-                Email
-              </label>
               <input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
-                className="w-full rounded-lg bg-neutral-800/50 border border-neutral-700 px-4 py-2.5 text-white placeholder-neutral-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+                placeholder="Email"
+                className="w-full rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-white/90 placeholder-white/40 focus:border-blue-500/50 focus:bg-white/10 outline-none transition-all"
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
@@ -78,14 +75,11 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-neutral-300 mb-2">
-                Password
-              </label>
               <input
                 id="password"
                 type="password"
-                placeholder="••••••••"
-                className="w-full rounded-lg bg-neutral-800/50 border border-neutral-700 px-4 py-2.5 text-white placeholder-neutral-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
+                placeholder="Password"
+                className="w-full rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-white/90 placeholder-white/40 focus:border-blue-500/50 focus:bg-white/10 outline-none transition-all"
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
@@ -99,7 +93,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading || !email || !password}
-              className="w-full rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium py-3 shadow-lg shadow-blue-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>

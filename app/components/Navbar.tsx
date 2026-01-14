@@ -20,29 +20,29 @@ export default function Navbar() {
   const isLoginPage = pathname === "/login";
 
   return (
-    <nav className="fixed top-0 inset-x-0 z-50 backdrop-blur-xl bg-[#0a0e1a]/80 border-b border-neutral-800">
+    <nav className="fixed top-0 inset-x-0 z-50 backdrop-blur-2xl bg-black/30">
       <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
+          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
             <span className="text-white font-bold text-sm">DA</span>
           </div>
-          <h1 className="text-base font-semibold text-white">
+          <h1 className="text-lg font-semibold text-white/90">
             Dev Assets
           </h1>
         </div>
 
         {!isLoginPage && (
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             <button
               onClick={() => router.push("/dashboard")}
-              className="text-sm text-neutral-400 hover:text-white transition"
+              className="text-sm text-white/70 hover:text-white transition-colors"
             >
               Dashboard
             </button>
 
             <button
               onClick={handleLogout}
-              className="text-sm text-neutral-400 hover:text-white transition"
+              className="text-sm text-white/70 hover:text-white transition-colors"
             >
               Logout
             </button>
