@@ -23,8 +23,8 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
 
     try {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) throw new Error("Authentication error: " + sessionError.message);
-      if (!session) throw new Error("Not authenticated. Please log in.");
+      if (sessionError) throw new Error("Authentication error");
+      if (!session) throw new Error("Not authenticated");
 
       const userId = session.user.id;
       const timestamp = Date.now();
@@ -35,7 +35,7 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
         .from("assets")
         .upload(path, file, { cacheControl: '3600', upsert: false });
       
-      if (uploadError) throw new Error("Upload failed: " + uploadError.message);
+      if (uploadError) throw new Error("Upload failed");
 
       const { data: urlData } = supabase.storage.from("assets").getPublicUrl(path);
       const publicUrl = urlData.publicUrl;
@@ -49,14 +49,14 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
       
       if (insertError) {
         await supabase.storage.from("assets").remove([path]);
-        throw new Error("Database error: " + insertError.message);
+        throw new Error("Failed to save asset");
       }
 
       setSuccess("File uploaded successfully!");
       setFile(null);
       onUploaded?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed. Please try again.");
+      setError(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setLoading(false);
     }
@@ -64,41 +64,42 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
 
   return (
     <div>
-      <h3 className="text-base font-semibold text-white/90 mb-4">Upload Asset</h3>
+      <label className="block text-sm font-medium text-white mb-3">Upload Asset</label>
       
       <div className="space-y-3">
-        <input
-          type="file"
-          accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
-          className="block w-full text-sm text-white/70
-            file:mr-4 file:rounded-lg file:border-0
-            file:bg-gradient-to-r file:from-blue-500 file:to-blue-600
-            file:px-4 file:py-2 file:text-sm file:text-white file:font-medium
-            file:shadow-lg file:shadow-blue-500/20
-            hover:file:from-blue-600 hover:file:to-blue-700
-            file:cursor-pointer cursor-pointer file:transition-all"
-          onChange={(e) => {
-            setFile(e.target.files?.[0] ?? null);
-            setError(null);
-            setSuccess(null);
-          }}
-          disabled={loading}
-        />
+        <div className="relative">
+          <input
+            type="file"
+            accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
+            className="block w-full text-xs text-neutral-400
+              file:mr-3 file:rounded-xl file:border-0
+              file:bg-blue-600 file:px-4 file:py-2.5
+              file:text-xs file:text-white file:font-medium
+              hover:file:bg-blue-700
+              file:cursor-pointer cursor-pointer file:transition-all"
+            onChange={(e) => {
+              setFile(e.target.files?.[0] ?? null);
+              setError(null);
+              setSuccess(null);
+            }}
+            disabled={loading}
+          />
+        </div>
 
         <button
           onClick={handleUpload}
           disabled={loading || !file}
-          className="w-full rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium py-2.5 shadow-lg shadow-blue-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+          className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium py-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
         >
           {loading ? "Uploading..." : "Upload File"}
         </button>
 
         {success && (
-          <p className="text-green-400 text-xs">{success}</p>
+          <p className="text-xs text-green-400">{success}</p>
         )}
         
         {error && (
-          <p className="text-red-400 text-xs">{error}</p>
+          <p className="text-xs text-red-400">{error}</p>
         )}
       </div>
     </div>
