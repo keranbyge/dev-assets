@@ -19,35 +19,21 @@ export default function Navbar() {
 
   const isLoginPage = pathname === "/login";
 
+  if (isLoginPage) return null;
+
   return (
-    <nav className="fixed top-0 inset-x-0 z-50 backdrop-blur-2xl bg-black/30">
-      <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg">
-            <span className="text-white font-bold text-sm">DA</span>
-          </div>
-          <h1 className="text-lg font-semibold text-white/90">
-            Dev Assets
-          </h1>
-        </div>
+    <nav className="fixed top-0 inset-x-0 z-50 backdrop-blur-xl bg-white/5 border-b border-white/10">
+      <div className="mx-auto max-w-4xl px-6 h-14 flex items-center justify-between">
+        <h1 className="text-base font-semibold text-white">
+          Dev Assets
+        </h1>
 
-        {!isLoginPage && (
-          <div className="flex items-center gap-6">
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="text-sm text-white/70 hover:text-white transition-colors"
-            >
-              Dashboard
-            </button>
-
-            <button
-              onClick={handleLogout}
-              className="text-sm text-white/70 hover:text-white transition-colors"
-            >
-              Logout
-            </button>
-          </div>
-        )}
+        <button
+          onClick={handleLogout}
+          className="text-sm text-white/70 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-white/10"
+        >
+          Logout
+        </button>
       </div>
     </nav>
   );

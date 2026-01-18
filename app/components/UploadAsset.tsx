@@ -64,42 +64,40 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
 
   return (
     <div>
-      <label className="block text-sm font-medium text-white mb-3">Upload Asset</label>
+      <h3 className="text-base font-semibold text-white mb-4">Upload Asset</h3>
       
-      <div className="space-y-3">
-        <div className="relative">
-          <input
-            type="file"
-            accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
-            className="block w-full text-xs text-neutral-400
-              file:mr-3 file:rounded-xl file:border-0
-              file:bg-blue-600 file:px-4 file:py-2.5
-              file:text-xs file:text-white file:font-medium
-              hover:file:bg-blue-700
-              file:cursor-pointer cursor-pointer file:transition-all"
-            onChange={(e) => {
-              setFile(e.target.files?.[0] ?? null);
-              setError(null);
-              setSuccess(null);
-            }}
-            disabled={loading}
-          />
-        </div>
+      <div className="space-y-4">
+        <input
+          type="file"
+          accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
+          className="block w-full text-sm text-white/70
+            file:mr-4 file:rounded-xl file:border-0
+            file:bg-blue-600 file:px-4 file:py-2.5
+            file:text-sm file:text-white file:font-medium
+            hover:file:bg-blue-700
+            file:cursor-pointer cursor-pointer file:transition-all"
+          onChange={(e) => {
+            setFile(e.target.files?.[0] ?? null);
+            setError(null);
+            setSuccess(null);
+          }}
+          disabled={loading}
+        />
 
         <button
           onClick={handleUpload}
           disabled={loading || !file}
-          className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium py-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+          className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-medium py-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? "Uploading..." : "Upload File"}
         </button>
 
         {success && (
-          <p className="text-xs text-green-400">{success}</p>
+          <p className="text-sm text-green-400">{success}</p>
         )}
         
         {error && (
-          <p className="text-xs text-red-400">{error}</p>
+          <p className="text-sm text-red-400">{error}</p>
         )}
       </div>
     </div>

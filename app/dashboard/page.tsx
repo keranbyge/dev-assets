@@ -86,55 +86,62 @@ export default function DashboardPage() {
 
   if (!sessionChecked) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen pt-14 flex items-center justify-center">
         <div className="text-white/50 text-sm">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <div className="w-full max-w-md rounded-2xl" style={{
-        background: 'rgba(20, 20, 20, 0.6)',
-        backdropFilter: 'blur(30px)',
-        border: '1px solid rgba(255, 255, 255, 0.12)',
-        boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)'
-      }}>
-        <div className="p-8">
+    <div className="min-h-screen pt-14 flex items-center justify-center p-4">
+      <div className="w-full max-w-4xl">
+        <div 
+          className="rounded-2xl p-8 shadow-2xl"
+          style={{
+            background: 'rgba(255, 255, 255, 0.08)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.15)'
+          }}
+        >
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-white mb-2">Dev Assets</h1>
-            <p className="text-sm text-neutral-400">Manage your digital assets</p>
+            <p className="text-sm text-white/60">Manage your digital assets</p>
           </div>
 
           {/* Upload Section */}
-          <div className="mb-6">
-            <UploadAsset onUploaded={fetchAssets} />
+          <div className="mb-8">
+            <div 
+              className="rounded-xl p-6"
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)'
+              }}
+            >
+              <UploadAsset onUploaded={fetchAssets} />
+            </div>
           </div>
-
-          {/* Divider */}
-          <div className="h-px bg-white/10 my-6"></div>
 
           {/* Assets Section */}
           <div>
-            <h2 className="text-base font-semibold text-white mb-4">Your Assets</h2>
+            <h2 className="text-lg font-semibold text-white mb-4">Your Assets</h2>
             
             {error && (
-              <div className="mb-4 text-xs text-red-400">
+              <div className="mb-4 text-sm text-red-400">
                 {error}
               </div>
             )}
 
             {loading ? (
-              <div className="text-center py-8 text-neutral-400 text-sm">Loading...</div>
+              <div className="text-center py-8 text-white/50 text-sm">Loading...</div>
             ) : assets.length === 0 ? (
-              <div className="text-center py-10">
-                <div className="text-3xl mb-3 opacity-30">📁</div>
+              <div className="text-center py-12">
+                <div className="text-4xl mb-3 opacity-30">📁</div>
                 <p className="text-white text-sm mb-1">No assets yet</p>
-                <p className="text-neutral-400 text-xs">Upload your first file to get started</p>
+                <p className="text-white/60 text-xs">Upload your first file to get started</p>
               </div>
             ) : (
-              <div className="space-y-3 max-h-64 overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {assets.map((asset) => {
                   const url = asset.public_url ?? publicUrlFor(asset.file_path);
                   const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(asset.file_name);
@@ -142,25 +149,26 @@ export default function DashboardPage() {
                   return (
                     <div
                       key={asset.id}
-                      className="rounded-xl p-3 transition-all"
+                      className="rounded-xl p-4 transition-all hover:scale-105"
                       style={{
                         background: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)'
                       }}
                     >
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-black/50 flex items-center justify-center overflow-hidden">
-                          {isImage ? (
-                            <img src={url} alt={asset.file_name} className="w-full h-full object-cover" />
-                          ) : (
-                            <span className="text-lg opacity-40">📄</span>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-xs font-medium text-white truncate" title={asset.file_name}>
-                            {asset.file_name}
-                          </h3>
-                        </div>
+                      <div className="aspect-square rounded-lg bg-black/30 mb-3 overflow-hidden">
+                        {isImage ? (
+                          <img src={url} alt={asset.file_name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="flex items-center justify-center h-full">
+                            <span className="text-3xl opacity-40">📄</span>
+                          </div>
+                        )}
                       </div>
+                      
+                      <h3 className="text-sm font-medium text-white truncate mb-3" title={asset.file_name}>
+                        {asset.file_name}
+                      </h3>
+                      
                       <div className="flex gap-2">
                         <a
                           href={url}
