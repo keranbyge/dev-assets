@@ -86,62 +86,71 @@ export default function DashboardPage() {
 
   if (!sessionChecked) {
     return (
-      <div className="min-h-screen pt-14 flex items-center justify-center">
-        <div className="text-white/50 text-sm">Loading...</div>
+      <div className="min-h-screen pt-16 bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
+        <div className="flex items-center gap-3">
+          <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+          <span className="text-white/60 text-base font-medium">Loading...</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pt-14 flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl">
+    <div className="min-h-screen pt-16 bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center p-6">
+      <div className="w-full max-w-5xl">
         <div 
-          className="rounded-2xl p-8 shadow-2xl"
+          className="rounded-3xl p-10 shadow-2xl relative overflow-hidden"
           style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.15)'
+            background: 'rgba(255, 255, 255, 0.06)',
+            backdropFilter: 'blur(24px)',
+            border: '1px solid rgba(255, 255, 255, 0.12)'
           }}
         >
+          {/* Subtle gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
           {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-white mb-2">Dev Assets</h1>
-            <p className="text-sm text-white/60">Manage your digital assets</p>
+          <div className="text-center mb-10 relative">
+            <h1 className="text-3xl font-bold text-white mb-3 tracking-tight">Dev Assets</h1>
+            <p className="text-base text-white/50 font-medium">Manage and organize your digital assets</p>
           </div>
 
           {/* Upload Section */}
-          <div className="mb-8">
+          <div className="mb-10">
             <div 
-              className="rounded-xl p-6"
+              className="rounded-2xl p-8 relative overflow-hidden"
               style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.1)'
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.08)'
               }}
             >
+              <div className="absolute inset-0 bg-gradient-to-br from-white/3 to-transparent pointer-events-none" />
               <UploadAsset onUploaded={fetchAssets} />
             </div>
           </div>
 
           {/* Assets Section */}
-          <div>
-            <h2 className="text-lg font-semibold text-white mb-4">Your Assets</h2>
+          <div className="relative">
+            <h2 className="text-xl font-bold text-white mb-6 tracking-tight">Your Assets</h2>
             
             {error && (
-              <div className="mb-4 text-sm text-red-400">
+              <div className="mb-6 text-sm text-red-300 bg-red-500/15 border border-red-500/20 rounded-2xl p-4 backdrop-blur-sm">
                 {error}
               </div>
             )}
 
             {loading ? (
-              <div className="text-center py-8 text-white/50 text-sm">Loading...</div>
-            ) : assets.length === 0 ? (
               <div className="text-center py-12">
-                <div className="text-4xl mb-3 opacity-30">📁</div>
-                <p className="text-white text-sm mb-1">No assets yet</p>
-                <p className="text-white/60 text-xs">Upload your first file to get started</p>
+                <div className="w-8 h-8 border-2 border-white/20 border-t-white/60 rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-white/50 text-base font-medium">Loading assets...</p>
+              </div>
+            ) : assets.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="text-6xl mb-4 opacity-20">📁</div>
+                <p className="text-white text-lg mb-2 font-semibold">No assets yet</p>
+                <p className="text-white/50 text-base font-medium">Upload your first file to get started</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {assets.map((asset) => {
                   const url = asset.public_url ?? publicUrlFor(asset.file_path);
                   const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(asset.file_name);
@@ -149,38 +158,40 @@ export default function DashboardPage() {
                   return (
                     <div
                       key={asset.id}
-                      className="rounded-xl p-4 transition-all hover:scale-105"
+                      className="rounded-2xl p-5 transition-all duration-200 hover:scale-[1.02] group relative overflow-hidden"
                       style={{
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        border: '1px solid rgba(255, 255, 255, 0.1)'
+                        background: 'rgba(255, 255, 255, 0.04)',
+                        border: '1px solid rgba(255, 255, 255, 0.08)'
                       }}
                     >
-                      <div className="aspect-square rounded-lg bg-black/30 mb-3 overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
+                      
+                      <div className="aspect-square rounded-xl bg-black/20 mb-4 overflow-hidden relative">
                         {isImage ? (
                           <img src={url} alt={asset.file_name} className="w-full h-full object-cover" />
                         ) : (
                           <div className="flex items-center justify-center h-full">
-                            <span className="text-3xl opacity-40">📄</span>
+                            <span className="text-4xl opacity-30">📄</span>
                           </div>
                         )}
                       </div>
                       
-                      <h3 className="text-sm font-medium text-white truncate mb-3" title={asset.file_name}>
+                      <h3 className="text-sm font-semibold text-white truncate mb-4 relative" title={asset.file_name}>
                         {asset.file_name}
                       </h3>
                       
-                      <div className="flex gap-2">
+                      <div className="flex gap-3 relative">
                         <a
                           href={url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 text-center text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-2 transition-all font-medium"
+                          className="flex-1 text-center text-sm bg-blue-600/80 hover:bg-blue-600 text-white rounded-xl px-4 py-2.5 transition-all font-semibold backdrop-blur-sm"
                         >
                           View
                         </a>
                         <button
                           onClick={() => deleteAsset(asset)}
-                          className="text-xs bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg px-3 py-2 transition-all font-medium"
+                          className="text-sm bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-xl px-4 py-2.5 transition-all font-semibold backdrop-blur-sm"
                         >
                           Delete
                         </button>

@@ -22,15 +22,15 @@ export default function Navbar() {
   if (isLoginPage) return null;
 
   return (
-    <nav className="fixed top-0 inset-x-0 z-50 backdrop-blur-xl bg-white/5 border-b border-white/10">
-      <div className="mx-auto max-w-4xl px-6 h-14 flex items-center justify-between">
-        <h1 className="text-base font-semibold text-white">
+    <nav className="fixed top-0 inset-x-0 z-50 backdrop-blur-xl bg-white/4 border-b border-white/8">
+      <div className="mx-auto max-w-5xl px-8 h-16 flex items-center justify-between">
+        <h1 className="text-lg font-bold text-white tracking-tight">
           Dev Assets
         </h1>
 
         <button
           onClick={handleLogout}
-          className="text-sm text-white/70 hover:text-white transition-colors px-3 py-1.5 rounded-lg hover:bg-white/10"
+          className="text-sm text-white/60 hover:text-white transition-all duration-200 px-4 py-2 rounded-xl hover:bg-white/8 font-semibold backdrop-blur-sm"
         >
           Logout
         </button>
