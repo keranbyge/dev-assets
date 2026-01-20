@@ -63,57 +63,49 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
   };
 
   return (
-    <div className="relative">
-      <h3 className="text-lg font-bold text-white mb-6 tracking-tight">Upload New Asset</h3>
+    <div>
+      <h3 className="text-base font-semibold text-white mb-4">Upload Asset</h3>
       
-      <div className="space-y-6">
-        <div className="relative">
-          <input
-            type="file"
-            accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
-            className="block w-full text-base text-white/70
-              file:mr-5 file:rounded-2xl file:border-0
-              file:bg-blue-600/80 file:px-6 file:py-3
-              file:text-sm file:text-white file:font-semibold
-              hover:file:bg-blue-600 file:backdrop-blur-sm
-              file:cursor-pointer cursor-pointer file:transition-all file:duration-200
-              file:shadow-lg file:shadow-blue-500/20"
-            onChange={(e) => {
-              setFile(e.target.files?.[0] ?? null);
-              setError(null);
-              setSuccess(null);
-            }}
-            disabled={loading}
-          />
-        </div>
+      <div className="space-y-4">
+        <input
+          type="file"
+          accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
+          className="block w-full text-sm text-white/70
+            file:mr-4 file:rounded-xl file:border-0
+            file:bg-blue-600 file:px-4 file:py-2.5
+            file:text-sm file:text-white file:font-medium
+            hover:file:bg-blue-700
+            file:cursor-pointer cursor-pointer file:transition-all"
+          onChange={(e) => {
+            setFile(e.target.files?.[0] ?? null);
+            setError(null);
+            setSuccess(null);
+          }}
+          disabled={loading}
+        />
 
         <button
           onClick={handleUpload}
           disabled={loading || !file}
-          className="w-full rounded-2xl bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 hover:from-blue-600 hover:via-blue-700 hover:to-indigo-700 active:scale-[0.98] text-white font-semibold py-4 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 text-base shadow-xl shadow-blue-500/20 backdrop-blur-sm"
+          className="w-full rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? (
-            <div className="flex items-center justify-center gap-3">
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Uploading...
-            </div>
-          ) : (
-            "Upload File"
-          )}
+          {loading ? "Uploading..." : "Upload File"}
         </button>
 
         {success && (
-          <div className="text-sm text-green-300 bg-green-500/15 border border-green-500/20 rounded-2xl p-4 backdrop-blur-sm font-medium">
+          <div className="text-sm text-green-300 bg-green-500/10 rounded-xl p-3 border border-green-500/20">
             {success}
           </div>
         )}
         
         {error && (
-          <div className="text-sm text-red-300 bg-red-500/15 border border-red-500/20 rounded-2xl p-4 backdrop-blur-sm font-medium">
+          <div className="text-sm text-red-300 bg-red-500/10 rounded-xl p-3 border border-red-500/20">
             {error}
           </div>
         )}
       </div>
     </div>
+  );
+}
   );
 }
