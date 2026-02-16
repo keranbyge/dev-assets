@@ -22,22 +22,27 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
     setSuccess(null);
 
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
       if (sessionError) throw new Error("Authentication error");
       if (!session) throw new Error("Not authenticated");
 
       const userId = session.user.id;
       const timestamp = Date.now();
-      const fileName = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const fileName = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
       const path = `${userId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from("assets")
-        .upload(path, file, { cacheControl: '3600', upsert: false });
-      
+        .upload(path, file, { cacheControl: "3600", upsert: false });
+
       if (uploadError) throw new Error("Upload failed");
 
-      const { data: urlData } = supabase.storage.from("assets").getPublicUrl(path);
+      const { data: urlData } = supabase.storage
+        .from("assets")
+        .getPublicUrl(path);
       const publicUrl = urlData.publicUrl;
 
       const { error: insertError } = await supabase.from("assets").insert({
@@ -46,7 +51,7 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
         file_path: path,
         public_url: publicUrl,
       });
-      
+
       if (insertError) {
         await supabase.storage.from("assets").remove([path]);
         throw new Error("Failed to save asset");
@@ -65,7 +70,7 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
   return (
     <div>
       <h3 className="text-base font-semibold text-white mb-4">Upload Asset</h3>
-      
+
       <div className="space-y-4">
         <input
           type="file"
@@ -97,7 +102,7 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
             {success}
           </div>
         )}
-        
+
         {error && (
           <div className="text-sm text-red-300 bg-red-500/10 rounded-xl p-3 border border-red-500/20">
             {error}
@@ -105,7 +110,5 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
         )}
       </div>
     </div>
-  );
-}
   );
 }
