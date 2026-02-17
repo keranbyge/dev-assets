@@ -10,7 +10,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased">
         <Navbar />
-        <div className="pt-16">{children}</div>
+        {children}
       </body>
     </html>
   );

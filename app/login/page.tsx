@@ -23,15 +23,24 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error: loginError } = await supabase.auth.signInWithPassword({
         email: email.trim(),
         password,
       });
 
-      if (error) throw new Error(error.message);
-      if (data.user) router.push("/dashboard");
+      if (loginError) {
+        throw new Error(loginError.message);
+      }
+      
+      if (data.user) {
+        router.push("/dashboard");
+      } else {
+        throw new Error("Login failed: No user data returned");
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      const errorMessage = err instanceof Error ? err.message : "Login failed";
+      console.error("Login failed:", errorMessage);
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -41,7 +50,6 @@ export default function LoginPage() {
     <div className="min-h-screen bg-black flex items-center justify-center p-6">
       <div className="w-full max-w-sm">
         <div className="glass-strong rounded-3xl p-8 shadow-2xl">
-          {/* Header */}
           <div className="text-center mb-8">
             <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center mb-6 shadow-lg shadow-blue-500/25">
               <span className="text-white font-bold text-xl">DA</span>
@@ -50,14 +58,12 @@ export default function LoginPage() {
             <p className="text-white/60 text-sm">Sign in to Dev Assets</p>
           </div>
 
-          {/* Error */}
           {error && (
             <div className="mb-6 text-sm text-red-300 text-center bg-red-500/10 rounded-2xl p-4 border border-red-500/20">
               {error}
             </div>
           )}
 
-          {/* Form */}
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-white/80 mb-2">

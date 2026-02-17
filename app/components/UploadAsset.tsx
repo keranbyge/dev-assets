@@ -22,27 +22,30 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
     setSuccess(null);
 
     try {
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
-      if (sessionError) throw new Error("Authentication error");
-      if (!session) throw new Error("Not authenticated");
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        throw new Error(`Authentication error: ${sessionError.message}`);
+      }
+      
+      if (!session) {
+        throw new Error("Not authenticated. Please log in again.");
+      }
 
       const userId = session.user.id;
       const timestamp = Date.now();
       const fileName = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
       const path = `${userId}/${fileName}`;
-
+      
       const { error: uploadError } = await supabase.storage
         .from("assets")
         .upload(path, file, { cacheControl: "3600", upsert: false });
 
-      if (uploadError) throw new Error("Upload failed");
+      if (uploadError) {
+        throw new Error(`Upload failed: ${uploadError.message}`);
+      }
 
-      const { data: urlData } = supabase.storage
-        .from("assets")
-        .getPublicUrl(path);
+      const { data: urlData } = supabase.storage.from("assets").getPublicUrl(path);
       const publicUrl = urlData.publicUrl;
 
       const { error: insertError } = await supabase.from("assets").insert({
@@ -53,15 +56,23 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
       });
 
       if (insertError) {
-        await supabase.storage.from("assets").remove([path]);
-        throw new Error("Failed to save asset");
+        await supabase.storage.from("assets").remove([path]).catch(() => {});
+        throw new Error(`Failed to save asset: ${insertError.message}`);
       }
 
       setSuccess("File uploaded successfully!");
       setFile(null);
-      onUploaded?.();
+      
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      if (fileInput) fileInput.value = "";
+      
+      if (onUploaded) {
+        setTimeout(() => onUploaded(), 500);
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      const errorMessage = err instanceof Error ? err.message : "Upload failed";
+      console.error("Upload error:", errorMessage);
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -82,7 +93,8 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
             hover:file:bg-blue-700
             file:cursor-pointer cursor-pointer file:transition-all"
           onChange={(e) => {
-            setFile(e.target.files?.[0] ?? null);
+            const selectedFile = e.target.files?.[0] || null;
+            setFile(selectedFile);
             setError(null);
             setSuccess(null);
           }}
