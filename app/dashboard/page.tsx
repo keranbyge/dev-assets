@@ -19,15 +19,8 @@ export default function DashboardPage() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const fetchAssets = async () => {
-    if (!mounted) return;
-
     try {
       setLoading(true);
       setError(null);
@@ -35,8 +28,8 @@ export default function DashboardPage() {
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
-        console.error("Session error:", sessionError.message);
-        setError("Authentication error. Please try logging in again.");
+        console.error("Session error:", sessionError);
+        setError("Authentication error. Please log in again.");
         setLoading(false);
         return;
       }
@@ -53,7 +46,7 @@ export default function DashboardPage() {
         .order("created_at", { ascending: false });
 
       if (fetchError) {
-        console.error("Database error:", fetchError.message);
+        console.error("Database error:", fetchError);
         setError("Failed to load assets. Please refresh the page.");
         setAssets([]);
       } else {
@@ -61,7 +54,7 @@ export default function DashboardPage() {
       }
       
     } catch (err) {
-      console.error("Dashboard error:", err);
+      console.error("Unexpected error:", err);
       setError("An unexpected error occurred. Please refresh the page.");
       setAssets([]);
     } finally {
@@ -70,10 +63,8 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    if (mounted) {
-      fetchAssets();
-    }
-  }, [mounted]);
+    fetchAssets();
+  }, []);
 
   const publicUrlFor = (path: string) => {
     try {
@@ -110,14 +101,6 @@ export default function DashboardPage() {
       setError("Failed to delete asset");
     }
   };
-
-  if (!mounted) {
-    return (
-      <div className="min-h-screen pt-16 bg-black flex items-center justify-center">
-        <div className="text-white/60 text-sm">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen pt-16 bg-black flex items-center justify-center p-6">

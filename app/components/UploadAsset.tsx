@@ -17,48 +17,78 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
       return;
     }
 
+    console.log("Starting upload for:", file.name);
     setLoading(true);
     setError(null);
     setSuccess(null);
 
     try {
+      // Step 1: Check session
+      console.log("Step 1: Checking session...");
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
+        console.error("Session error:", sessionError);
         throw new Error(`Authentication error: ${sessionError.message}`);
       }
       
       if (!session) {
+        console.error("No session found");
         throw new Error("Not authenticated. Please log in again.");
       }
 
+      console.log("Session valid, user ID:", session.user.id);
+
+      // Step 2: Prepare file path
       const userId = session.user.id;
       const timestamp = Date.now();
       const fileName = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
       const path = `${userId}/${fileName}`;
       
-      const { error: uploadError } = await supabase.storage
+      console.log("Step 2: Uploading to path:", path);
+
+      // Step 3: Upload to storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from("assets")
-        .upload(path, file, { cacheControl: "3600", upsert: false });
+        .upload(path, file, { 
+          cacheControl: "3600", 
+          upsert: false 
+        });
 
       if (uploadError) {
+        console.error("Upload error:", uploadError);
         throw new Error(`Upload failed: ${uploadError.message}`);
       }
 
+      console.log("Step 3: Upload successful:", uploadData);
+
+      // Step 4: Get public URL
       const { data: urlData } = supabase.storage.from("assets").getPublicUrl(path);
       const publicUrl = urlData.publicUrl;
+      console.log("Step 4: Public URL:", publicUrl);
 
-      const { error: insertError } = await supabase.from("assets").insert({
-        user_id: userId,
-        file_name: file.name,
-        file_path: path,
-        public_url: publicUrl,
-      });
+      // Step 5: Insert into database
+      console.log("Step 5: Inserting into database...");
+      const { data: insertData, error: insertError } = await supabase
+        .from("assets")
+        .insert({
+          user_id: userId,
+          file_name: file.name,
+          file_path: path,
+          public_url: publicUrl,
+        })
+        .select();
 
       if (insertError) {
-        await supabase.storage.from("assets").remove([path]).catch(() => {});
+        console.error("Database insert error:", insertError);
+        // Cleanup uploaded file
+        await supabase.storage.from("assets").remove([path]).catch((e) => {
+          console.error("Cleanup error:", e);
+        });
         throw new Error(`Failed to save asset: ${insertError.message}`);
       }
+
+      console.log("Step 5: Database insert successful:", insertData);
 
       setSuccess("File uploaded successfully!");
       setFile(null);
@@ -67,14 +97,16 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
       if (fileInput) fileInput.value = "";
       
       if (onUploaded) {
+        console.log("Refreshing assets list...");
         setTimeout(() => onUploaded(), 500);
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Upload failed";
-      console.error("Upload error:", errorMessage);
+      console.error("Upload error:", err);
       setError(errorMessage);
     } finally {
       setLoading(false);
+      console.log("Upload process completed");
     }
   };
 
@@ -97,6 +129,9 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
             setFile(selectedFile);
             setError(null);
             setSuccess(null);
+            if (selectedFile) {
+              console.log("File selected:", selectedFile.name, selectedFile.size, "bytes");
+            }
           }}
           disabled={loading}
         />
@@ -111,13 +146,13 @@ export default function UploadAsset({ onUploaded }: UploadAssetProps) {
 
         {success && (
           <div className="text-sm text-green-300 bg-green-500/10 rounded-xl p-3 border border-green-500/20">
-            {success}
+            ✓ {success}
           </div>
         )}
 
         {error && (
           <div className="text-sm text-red-300 bg-red-500/10 rounded-xl p-3 border border-red-500/20">
-            {error}
+            ✗ {error}
           </div>
         )}
       </div>
